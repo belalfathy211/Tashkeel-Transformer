@@ -10,7 +10,6 @@ __pycache__/
 
 .ipynb_checkpoints/
 dumy.ipynb
-tashkeel.ipynb
 
 .idea/
 .vscode/
@@ -19,6 +18,6 @@ tashkeel.ipynb
 .DS_Store
 Thumbs.db
 
-tashkeel_transformer1.pth
+tashkeel_transformer.pth
 Sadeed_Tashkeela/
 arabic-tashkeel-dataset/
