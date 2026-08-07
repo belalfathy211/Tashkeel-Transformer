@@ -101,7 +101,6 @@ class TashkeelDataset:
         self.val_input_data = input_encoded[n:]
 
     def get_batch(self, split):
-        # may can extract_tashkeel and  encode_tashkeel and encode_kalam per batch here
         tashkeel_data = self.train_tashkeel_data if split == 'train' else self.val_tashkeel_data
         input_data = self.train_input_data if split == 'train' else self.val_input_data
         ix = torch.randint(min(len(input_data), len(tashkeel_data)) - self.block_size, (self.batch_size,))

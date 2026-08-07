@@ -2,11 +2,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-n_embd = 384
-dropout = 0.2
-
 class Head(nn.Module):
-    def __init__(self, head_size, block_size_, masked = True):
+    def __init__(self, n_embd, head_size, block_size_, dropout, masked = True):
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=False)
         self.query = nn.Linear(n_embd, head_size, bias=False)
@@ -38,9 +35,9 @@ class Head(nn.Module):
         return out
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, num_heads, head_size, block_size_, masked=True):
+    def __init__(self, n_embd, num_heads, head_size, block_size_, dropout, masked=True):
         super().__init__()
-        self.heads = nn.ModuleList([Head(head_size, block_size_, masked=masked) for _ in range(num_heads)])
+        self.heads = nn.ModuleList([Head(n_embd, head_size, block_size_, dropout, masked=masked) for _ in range(num_heads)])
         self.proj = nn.Linear(head_size * num_heads, n_embd)
         self.dropout = nn.Dropout(dropout)
 
@@ -50,7 +47,7 @@ class MultiHeadAttention(nn.Module):
         return out
 
 class FeedFoward(nn.Module):
-    def __init__(self, n_embd):
+    def __init__(self, n_embd, dropout):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(n_embd, 4 * n_embd),

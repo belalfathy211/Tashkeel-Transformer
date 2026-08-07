@@ -4,11 +4,11 @@ from transformer.modules import MultiHeadAttention, FeedFoward
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class EncoderBlock(nn.Module):
-    def __init__(self, n_embd, n_head, block_size, masked=False):
+    def __init__(self, n_embd, n_head, block_size, dropout, masked=False):
         super().__init__()
         head_size = n_embd // n_head
-        self.sa = MultiHeadAttention(n_head, head_size, block_size_= block_size, masked=masked)
-        self.ffwd = FeedFoward(n_embd)
+        self.sa = MultiHeadAttention(n_embd, n_head, head_size, block_size, dropout, masked=masked)
+        self.ffwd = FeedFoward(n_embd, dropout)
         self.ln1 = nn.LayerNorm(n_embd)
         self.ln2 = nn.LayerNorm(n_embd)
 
@@ -18,11 +18,11 @@ class EncoderBlock(nn.Module):
         return x
 
 class Encoder(nn.Module):
-    def __init__(self, n_embd, n_head, block_size, n_layer, chars_vocab_size):
+    def __init__(self, n_embd, n_head, block_size, n_layer, dropout, chars_vocab_size):
         super().__init__()
         self.token_embedding_table = nn.Embedding(chars_vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(*[EncoderBlock(n_embd, n_head, block_size, masked=False) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[EncoderBlock(n_embd, n_head, block_size, dropout, masked=False) for _ in range(n_layer)])
         self.apply(self._init_weights)
 
     def _init_weights(self, module):

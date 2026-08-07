@@ -5,12 +5,12 @@ from transformer.modules import MultiHeadAttention, FeedFoward
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class DecoderBlock(nn.Module):
-    def __init__(self, n_embd, n_head, block_size_decoder, masked=True):
+    def __init__(self, n_embd, n_head, block_size_decoder, dropout, masked=True):
         super().__init__()
         head_size = n_embd // n_head
-        self.sa = MultiHeadAttention(n_head, head_size, block_size_=block_size_decoder, masked=masked)
-        self.ca = MultiHeadAttention(n_head, head_size, block_size_=block_size_decoder, masked=False)
-        self.ffwd = FeedFoward(n_embd)
+        self.sa = MultiHeadAttention(n_embd, n_head, head_size, block_size_decoder, dropout, masked=masked)
+        self.ca = MultiHeadAttention(n_embd, n_head, head_size, block_size_decoder, dropout, masked=False)
+        self.ffwd = FeedFoward(n_embd, dropout)
         self.ln1 = nn.LayerNorm(n_embd)
         self.ln2 = nn.LayerNorm(n_embd)
         self.ln3 = nn.LayerNorm(n_embd)
@@ -22,11 +22,11 @@ class DecoderBlock(nn.Module):
         return x
 
 class Decoder(nn.Module):
-    def __init__(self, n_embd, n_head, block_size_decoder, n_layer, tashkeel_vocab_size):
+    def __init__(self, n_embd, n_head, block_size_decoder, n_layer, dropout, tashkeel_vocab_size):
         super().__init__()
         self.token_embedding_table = nn.Embedding(tashkeel_vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size_decoder, n_embd)
-        self.blocks = nn.Sequential(*[DecoderBlock(n_embd, n_head, block_size_decoder, masked=True) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[DecoderBlock(n_embd, n_head, block_size_decoder, dropout, masked=True) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embd)
         self.lm_head = nn.Linear(n_embd, tashkeel_vocab_size)
         self.apply(self._init_weights)
@@ -51,10 +51,14 @@ class Decoder(nn.Module):
 
         if targets is None:
             loss = None
+            accuracy = None
         else:
             B, T, C = logits.shape
             logits = logits.view(B*T, C)
             targets = targets.view(B*T)
             loss = F.cross_entropy(logits, targets)
 
-        return logits, loss
+            corrects = sum(torch.argmax(logits,1) == targets).item()
+            accuracy = corrects / targets.numel()
+
+        return logits, loss, accuracy
